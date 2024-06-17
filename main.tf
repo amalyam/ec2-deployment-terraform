@@ -102,6 +102,24 @@ resource "aws_nat_gateway" "gw_nat" {
   depends_on = [aws_internet_gateway.gw]
 }
 
+resource "aws_route_table" "private_route_table" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_nat_gateway.gw_nat.id
+  }
+
+  tags = {
+    Name = "dip2-private-route-table"
+  }
+
+}
+
+resource "aws_route_table_association" "private_subnet_association" {
+  subnet_id      = aws_subnet.private_subnet.id
+  route_table_id = aws_route_table.private_route_table.id
+}
 
 resource "tls_private_key" "private_key" {
   algorithm = "RSA"
