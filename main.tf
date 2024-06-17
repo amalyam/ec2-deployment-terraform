@@ -87,6 +87,22 @@ resource "aws_route_table_association" "public_subnet_association" {
   route_table_id = aws_route_table.public_route_table.id
 }
 
+resource "aws_eip" "nat" {
+  vpc = true
+
+  depends_on = [aws_internet_gateway.gw]
+}
+resource "aws_nat_gateway" "gw_nat" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public_subnet.id
+  tags = {
+    Name = "dip2-nat-gw"
+  }
+
+  depends_on = [aws_internet_gateway.gw]
+}
+
+
 resource "tls_private_key" "private_key" {
   algorithm = "RSA"
   rsa_bits  = 4096
