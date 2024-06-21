@@ -7,28 +7,28 @@ resource "aws_vpc" "main" {
   instance_tenancy = "default"
 
   tags = {
-    Name = "dip-vpc"
+    Name = "$(var.app_name)-vpc"
   }
 }
 
 resource "aws_subnet" "public_subnet" {
   count             = 2
   vpc_id            = aws_vpc.main.id
-  cidr_block        = count.index == 0 ? "10.0.0.0/26" : "10.0.0.64/26"
+  cidr_block        = var.public_subnet_cidrs[count.index]
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
-    Name = "dip-public-subnet-$(count.index + 1)"
+    Name = "$(var.app_name)-public-subnet-$(count.index + 1)"
   }
 }
 
 resource "aws_subnet" "private_subnet" {
   count             = 2
   vpc_id            = aws_vpc.main.id
-  cidr_block        = count.index == 0 ? "10.0.0.128/26" : "10.0.0.192/26"
+  cidr_block        = var.private_subnet_cidrs[count.index]
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
-    Name = "dip-private-subnet-$(count.index + 1)"
+    Name = "$(var.app_name)-private-subnet-$(count.index + 1)"
   }
 }
