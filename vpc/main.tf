@@ -32,3 +32,11 @@ resource "aws_subnet" "private_subnet" {
     Name = "$(var.app_name)-private-subnet-$(count.index + 1)"
   }
 }
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "$(var.app_name)-internet-gatway"
+  }
+}
