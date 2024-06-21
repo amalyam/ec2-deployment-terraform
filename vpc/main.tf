@@ -65,3 +65,15 @@ resource "aws_eip" "nat" {
 
   depends_on = [aws_internet_gateway.gw]
 }
+
+resource "aws_nat_gateway" "gw_nat" {
+  count         = 2
+  allocation_id = aws_eip.nat[count.index].id
+  subnet_id     = aws_subnet.public_subnet[count.index].id
+  tags = {
+    Name = "$(var.app_name)-nat-gw-$(count.index + 1)"
+  }
+
+  depends_on = [aws_internet_gateway.gw]
+}
+
