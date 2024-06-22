@@ -69,6 +69,7 @@ resource "aws_instance" "private_instance" {
   vpc_security_group_ids      = [aws_security_group.dip_private_sg.id]
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
 
+  user_data = file("./script.sh")
   tags = {
     Name = "${var.app_name}-private-ec2-${count.index + 1}"
   }
