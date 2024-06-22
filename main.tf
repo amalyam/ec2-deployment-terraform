@@ -65,7 +65,7 @@ resource "local_file" "private_key" {
 resource "aws_security_group" "dip_public_sg" {
   name        = "dip_public_sg"
   description = "Allow SSH and TCP inbound traffic and all outbound traffic"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = module.vpc.vpc_id
 
   ingress {
     from_port   = 22
@@ -95,7 +95,7 @@ resource "aws_security_group" "dip_public_sg" {
 resource "aws_security_group" "dip_private_sg" {
   name        = "dip_private_sg"
   description = "Allow SSH traffic from bastion host, TCP inbound traffic from public subnet, and all outbound traffic"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = module.vpc.vpc_id
 
   ingress {
     from_port       = 22
@@ -125,7 +125,7 @@ resource "aws_security_group" "dip_private_sg" {
 resource "aws_security_group" "dip_bastion_host_sg" {
   name        = "dip_bastion_host_sg"
   description = "Allow SSH traffic from my IP address and all outbound traffic"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = module.vpc.vpc_id
 
   ingress {
     from_port   = 22
