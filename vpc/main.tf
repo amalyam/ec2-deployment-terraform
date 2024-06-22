@@ -7,7 +7,7 @@ resource "aws_vpc" "main" {
   instance_tenancy = "default"
 
   tags = {
-    Name = "$(var.app_name)-vpc"
+    Name = "${var.app_name}-vpc"
   }
 }
 
@@ -18,7 +18,7 @@ resource "aws_subnet" "public_subnet" {
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
-    Name = "$(var.app_name)-public-subnet-$(count.index + 1)"
+    Name = "${var.app_name}-public-subnet-${count.index + 1}"
   }
 }
 
@@ -29,7 +29,7 @@ resource "aws_subnet" "private_subnet" {
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
-    Name = "$(var.app_name)-private-subnet-$(count.index + 1)"
+    Name = "${var.app_name}-private-subnet-${count.index + 1}"
   }
 }
 
@@ -37,7 +37,7 @@ resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "$(var.app_name)-internet-gatway"
+    Name = "${var.app_name}-internet-gatway"
   }
 }
 
@@ -50,7 +50,7 @@ resource "aws_route_table" "public_route_table" {
   }
 
   tags = {
-    Name = "$(var.app_name)-public-route-table"
+    Name = "${var.app_name}-public-route-table"
   }
 }
 
@@ -71,7 +71,7 @@ resource "aws_nat_gateway" "gw_nat" {
   allocation_id = aws_eip.nat[count.index].id
   subnet_id     = aws_subnet.public_subnet[count.index].id
   tags = {
-    Name = "$(var.app_name)-nat-gw-$(count.index + 1)"
+    Name = "${var.app_name}-nat-gw-${count.index + 1}"
   }
 
   depends_on = [aws_internet_gateway.gw]
@@ -87,7 +87,7 @@ resource "aws_route_table" "private_route_table" {
   }
 
   tags = {
-    Name = "$(var.app_name)-private-route-table-$(count.index + 1)"
+    Name = "${var.app_name}-private-route-table-${count.index + 1}"
   }
 
 }
