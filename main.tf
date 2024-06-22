@@ -53,17 +53,17 @@ resource "tls_private_key" "private_key" {
 }
 
 resource "aws_key_pair" "key" {
-  key_name   = "dip2-key-pair"
+  key_name   = "dip-key-pair"
   public_key = tls_private_key.private_key.public_key_openssh
 }
 
 resource "local_file" "private_key" {
   content  = tls_private_key.private_key.private_key_pem
-  filename = "dip2-key-pair.pem"
+  filename = "dip-key-pair.pem"
 }
 
-resource "aws_security_group" "dip2_public_sg" {
-  name        = "dip2_public_sg"
+resource "aws_security_group" "dip_public_sg" {
+  name        = "dip_public_sg"
   description = "Allow SSH and TCP inbound traffic and all outbound traffic"
   vpc_id      = aws_vpc.main.id
 
@@ -92,8 +92,8 @@ resource "aws_security_group" "dip2_public_sg" {
   }
 }
 
-resource "aws_security_group" "dip2_private_sg" {
-  name        = "dip2_private_sg"
+resource "aws_security_group" "dip_private_sg" {
+  name        = "dip_private_sg"
   description = "Allow SSH traffic from bastion host, TCP inbound traffic from public subnet, and all outbound traffic"
   vpc_id      = aws_vpc.main.id
 
@@ -101,7 +101,7 @@ resource "aws_security_group" "dip2_private_sg" {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = [aws_security_group.dip2_bastion_host_sg.id]
+    security_groups = [aws_security_group.dip_bastion_host_sg.id]
   }
 
   ingress {
@@ -122,8 +122,8 @@ resource "aws_security_group" "dip2_private_sg" {
   }
 }
 
-resource "aws_security_group" "dip2_bastion_host_sg" {
-  name        = "dip2_bastion_host_sg"
+resource "aws_security_group" "dip_bastion_host_sg" {
+  name        = "dip_bastion_host_sg"
   description = "Allow SSH traffic from my IP address and all outbound traffic"
   vpc_id      = aws_vpc.main.id
 
