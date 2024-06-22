@@ -26,9 +26,6 @@ provider "aws" {
 
 
 provider "http" {}
-data "http" "myip" {
-  url = "https://ipinfo.io/json"
-}
 
 module "vpc" {
   source = "./vpc"
@@ -38,10 +35,6 @@ module "vpc" {
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
   app_name             = var.app_name
-}
-
-output "myip" {
-  value = jsondecode(data.http.myip.response_body).ip
 }
 
 resource "aws_security_group" "dip_private_sg" {
@@ -77,42 +70,5 @@ resource "aws_instance" "private_instance" {
 
   tags = {
     Name = "${var.app_name}-private-ec2=${count.index + 1}"
-  }
-}
-
-resource "aws_security_group" "dip_bastion_host_sg" {
-  name        = "dip_bastion_host_sg"
-  description = "Allow SSH traffic from my IP address and all outbound traffic"
-  vpc_id      = module.vpc.vpc_id
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [format("%s/32", jsondecode(data.http.myip.response_body).ip)]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.app_name}-bastion-host-sg"
-  }
-}
-
-resource "aws_instance" "bastion_host" {
-  ami                         = "ami-033fabdd332044f06"
-  instance_type               = "t3.micro"
-  subnet_id                   = module.vpc.public_subnet_ids[0]
-  associate_public_ip_address = true
-  key_name                    = aws_key_pair.key.key_name
-  vpc_security_group_ids      = [aws_security_group.dip_bastion_host_sg.id]
-
-  tags = {
-    Name = "${var.app_name}-bastion-host-ec2"
   }
 }
