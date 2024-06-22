@@ -23,12 +23,8 @@ terraform {
 provider "aws" {
   region = var.region
 }
-provider "tls" {
 
-}
-provider "local" {
 
-}
 provider "http" {}
 data "http" "myip" {
   url = "https://ipinfo.io/json"
@@ -47,74 +43,11 @@ module "vpc" {
 output "myip" {
   value = jsondecode(data.http.myip.response_body).ip
 }
-resource "tls_private_key" "private_key" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
 
-resource "aws_key_pair" "key" {
-  key_name   = "dip-key-pair"
-  public_key = tls_private_key.private_key.public_key_openssh
-}
-
-resource "local_file" "private_key" {
-  content  = tls_private_key.private_key.private_key_pem
-  filename = "dip-key-pair.pem"
-}
-
-resource "aws_security_group" "dip_public_sg" {
-  name        = "dip_public_sg"
-  description = "Allow SSH and TCP inbound traffic and all outbound traffic"
-  vpc_id      = module.vpc.vpc_id
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [format("%s/32", jsondecode(data.http.myip.response_body).ip)]
-  }
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.app_name}-public-sg"
-  }
-}
-
-resource "aws_instance" "public_instance" {
-  ami                         = "ami-033fabdd332044f06"
-  instance_type               = "t3.micro"
-  subnet_id                   = module.vpc.public_subnet_ids[0]
-  associate_public_ip_address = true
-  key_name                    = aws_key_pair.key.key_name
-  vpc_security_group_ids      = [aws_security_group.dip_public_sg.id]
-
-  tags = {
-    Name = "${var.app_name}-public-ec2"
-  }
-}
 resource "aws_security_group" "dip_private_sg" {
   name        = "dip_private_sg"
   description = "Allow SSH traffic from bastion host, TCP inbound traffic from public subnet, and all outbound traffic"
   vpc_id      = module.vpc.vpc_id
-
-  ingress {
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
-    security_groups = [aws_security_group.dip_bastion_host_sg.id]
-  }
 
   ingress {
     from_port   = 80
@@ -135,15 +68,15 @@ resource "aws_security_group" "dip_private_sg" {
 }
 
 resource "aws_instance" "private_instance" {
+  count                       = 2
   ami                         = "ami-033fabdd332044f06"
   instance_type               = "t3.micro"
-  subnet_id                   = module.vpc.private_subnet_ids[0]
+  subnet_id                   = module.vpc.private_subnet_ids[count.index]
   associate_public_ip_address = false
-  key_name                    = aws_key_pair.key.key_name
   vpc_security_group_ids      = [aws_security_group.dip_private_sg.id]
 
   tags = {
-    Name = "${var.app_name}-private-ec2"
+    Name = "${var.app_name}-private-ec2=${count.index + 1}"
   }
 }
 
