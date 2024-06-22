@@ -23,104 +23,30 @@ terraform {
 provider "aws" {
   region = var.region
 }
+provider "tls" {
 
-provider "tls" {}
+}
+provider "local" {
 
-provider "local" {}
-
+}
 provider "http" {}
-
 data "http" "myip" {
   url = "https://ipinfo.io/json"
 }
 
-resource "aws_vpc" "main" {
-  cidr_block       = "10.0.0.0/24"
-  instance_tenancy = "default"
+module "vpc" {
+  source = "./vpc"
 
-  tags = {
-    Name = "dip2-vpc"
-  }
+  region               = var.region
+  cidr_block           = var.cidr_block
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
+  app_name             = var.app_name
 }
 
-resource "aws_subnet" "public_subnet" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.0.0/25"
-
-  tags = {
-    Name = "dip2-public-subnet"
-  }
+output "myip" {
+  value = jsondecode(data.http.myip.response_body).ip
 }
-
-resource "aws_subnet" "private_subnet" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.0.128/25"
-
-  tags = {
-    Name = "dip2-private-subnet"
-  }
-}
-
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.main.id
-
-  tags = {
-    Name = "dip2-internet-gatway"
-  }
-}
-
-resource "aws_route_table" "public_route_table" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.gw.id
-  }
-
-  tags = {
-    Name = "dip2-public-route-table"
-  }
-}
-
-resource "aws_route_table_association" "public_subnet_association" {
-  subnet_id      = aws_subnet.public_subnet.id
-  route_table_id = aws_route_table.public_route_table.id
-}
-
-resource "aws_eip" "nat" {
-  vpc = true
-
-  depends_on = [aws_internet_gateway.gw]
-}
-resource "aws_nat_gateway" "gw_nat" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public_subnet.id
-  tags = {
-    Name = "dip2-nat-gw"
-  }
-
-  depends_on = [aws_internet_gateway.gw]
-}
-
-resource "aws_route_table" "private_route_table" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_nat_gateway.gw_nat.id
-  }
-
-  tags = {
-    Name = "dip2-private-route-table"
-  }
-
-}
-
-resource "aws_route_table_association" "private_subnet_association" {
-  subnet_id      = aws_subnet.private_subnet.id
-  route_table_id = aws_route_table.private_route_table.id
-}
-
 resource "tls_private_key" "private_key" {
   algorithm = "RSA"
   rsa_bits  = 4096
