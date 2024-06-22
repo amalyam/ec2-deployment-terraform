@@ -88,10 +88,22 @@ resource "aws_security_group" "dip_public_sg" {
   }
 
   tags = {
-    Name = "dip2-public-sg"
+    Name = "${var.app_name}-public-sg"
   }
 }
 
+resource "aws_instance" "public_instance" {
+  ami                         = "ami-033fabdd332044f06"
+  instance_type               = "t3.micro"
+  subnet_id                   = module.vpc.public_subnet_ids[0]
+  associate_public_ip_address = true
+  key_name                    = aws_key_pair.key.key_name
+  vpc_security_group_ids      = [aws_security_group.dip_public_sg.id]
+
+  tags = {
+    Name = "${var.app_name}-public-ec2"
+  }
+}
 resource "aws_security_group" "dip_private_sg" {
   name        = "dip_private_sg"
   description = "Allow SSH traffic from bastion host, TCP inbound traffic from public subnet, and all outbound traffic"
@@ -118,7 +130,20 @@ resource "aws_security_group" "dip_private_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   tags = {
-    Name = "dip2-private-sg"
+    Name = "${var.app_name}-private-sg"
+  }
+}
+
+resource "aws_instance" "private_instance" {
+  ami                         = "ami-033fabdd332044f06"
+  instance_type               = "t3.micro"
+  subnet_id                   = module.vpc.private_subnet_ids[0]
+  associate_public_ip_address = false
+  key_name                    = aws_key_pair.key.key_name
+  vpc_security_group_ids      = [aws_security_group.dip_private_sg.id]
+
+  tags = {
+    Name = "${var.app_name}-private-ec2"
   }
 }
 
@@ -142,45 +167,19 @@ resource "aws_security_group" "dip_bastion_host_sg" {
   }
 
   tags = {
-    Name = "dip2-bastion-host-sg"
-  }
-}
-
-resource "aws_instance" "public_instance" {
-  ami                         = "ami-033fabdd332044f06"
-  instance_type               = "t3.micro"
-  subnet_id                   = aws_subnet.public_subnet.id
-  associate_public_ip_address = true
-  key_name                    = aws_key_pair.key.key_name
-  vpc_security_group_ids      = [aws_security_group.dip2_public_sg.id]
-
-  tags = {
-    Name = "dip2-public-ec2"
-  }
-}
-
-resource "aws_instance" "private_instance" {
-  ami                         = "ami-033fabdd332044f06"
-  instance_type               = "t3.micro"
-  subnet_id                   = aws_subnet.private_subnet.id
-  associate_public_ip_address = false
-  key_name                    = aws_key_pair.key.key_name
-  vpc_security_group_ids      = [aws_security_group.dip2_private_sg.id]
-
-  tags = {
-    Name = "dip2-private-ec2"
+    Name = "${var.app_name}-bastion-host-sg"
   }
 }
 
 resource "aws_instance" "bastion_host" {
   ami                         = "ami-033fabdd332044f06"
   instance_type               = "t3.micro"
-  subnet_id                   = aws_subnet.public_subnet.id
+  subnet_id                   = module.vpc.public_subnet_ids[0]
   associate_public_ip_address = true
   key_name                    = aws_key_pair.key.key_name
-  vpc_security_group_ids      = [aws_security_group.dip2_bastion_host_sg.id]
+  vpc_security_group_ids      = [aws_security_group.dip_bastion_host_sg.id]
 
   tags = {
-    Name = "dip2-bastion-host-ec2"
+    Name = "${var.app_name}-bastion-host-ec2"
   }
 }
