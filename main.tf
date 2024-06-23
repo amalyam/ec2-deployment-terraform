@@ -67,7 +67,7 @@ resource "aws_instance" "private_instance" {
   instance_type               = "t3.micro"
   subnet_id                   = module.vpc.private_subnet_ids[count.index]
   associate_public_ip_address = false
-  vpc_security_group_ids      = [aws_security_group.dip_private_sg.id]
+  vpc_security_group_ids      = [aws_security_group.private_sg.id]
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
 
   user_data = templatefile("./script.sh", {
@@ -105,7 +105,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_role.name
 }
 
-resource "aws_vpc_security_group_ingress_rule" "allow_tcp_traffic" {
+resource "aws_vpc_security_group_ingress_rule" "allow_tcp_traffic_lb" {
   security_group_id = aws_security_group.lb_sg.id
   cidr_ipv4         = "0.0.0.0/0"
   from_port         = 80
@@ -113,7 +113,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_tcp_traffic" {
   ip_protocol       = "tcp"
 }
 
-resource "aws_vpc_security_group_egress_rule" "allow_all_traffic" {
+resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_lb" {
   security_group_id = aws_security_group.lb_sg.id
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
