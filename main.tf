@@ -37,27 +37,28 @@ module "vpc" {
   app_name             = var.app_name
 }
 
-resource "aws_security_group" "dip_private_sg" {
-  name        = "dip_private_sg"
-  description = "Allow SSH traffic from bastion host, TCP inbound traffic from public subnet, and all outbound traffic"
+resource "aws_security_group" "private_sg" {
+  name        = "${var.app_name}-private-sg"
+  description = "Private sg"
   vpc_id      = module.vpc.vpc_id
 
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
   tags = {
     Name = "${var.app_name}-private-sg"
   }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_tcp_traffic_from_lb" {
+  security_group_id            = aws_security_group.private_sg.id
+  from_port                    = 80
+  to_port                      = 80
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = aws_security_group.lb_sg.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_to_private" {
+  security_group_id = aws_security_group.private_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
 }
 
 resource "aws_instance" "private_instance" {
