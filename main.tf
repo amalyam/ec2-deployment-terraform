@@ -46,8 +46,8 @@ resource "aws_security_group" "private_sg" {
 
 resource "aws_vpc_security_group_ingress_rule" "allow_tcp_traffic_from_lb" {
   security_group_id            = aws_security_group.private_sg.id
-  from_port                    = 80
-  to_port                      = 80
+  from_port                    = 3000
+  to_port                      = 3000
   ip_protocol                  = "tcp"
   referenced_security_group_id = aws_security_group.lb_sg.id
 }
