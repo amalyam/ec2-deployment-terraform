@@ -52,7 +52,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_tcp_traffic_from_lb" {
   referenced_security_group_id = aws_security_group.lb_sg.id
 }
 
-resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_to_private" {
+resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_private" {
   security_group_id = aws_security_group.private_sg.id
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
@@ -67,9 +67,6 @@ resource "aws_instance" "private_instance" {
   vpc_security_group_ids      = [aws_security_group.private_sg.id]
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
 
-  user_data = templatefile("./script.sh", {
-    instance_id = count.index + 1
-  })
   tags = {
     Name = "${var.app_name}-private-ec2-${count.index + 1}"
   }
